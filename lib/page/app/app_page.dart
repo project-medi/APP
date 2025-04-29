@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:project_medi/page/app/calendar_page.dart';
 import 'package:project_medi/page/app/my_page.dart';
-import 'package:project_medi/page/app/search.dart';
+import 'package:project_medi/page/app/search_page.dart';
 import 'package:project_medi/page/app/timer_page.dart';
 
 class AppPage extends StatefulWidget {
@@ -55,7 +55,7 @@ class _AppPageState extends State<AppPage> {
       ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        selectedItemColor: Color(0xff35ABFF),
+        selectedItemColor: Colors.black,
         unselectedItemColor: Colors.grey,
         currentIndex: _currentIndex,
         onTap: (index) {

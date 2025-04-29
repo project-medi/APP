@@ -7,20 +7,18 @@ import '../models/image_model.dart';
 class ApiService {
   final String baseUrl = "http://apis.data.go.kr/1471000";
   final String? serviceKey = dotenv.env["serviceKey"];
-
   final String type = "type=json";
-  final String medicineName = "타이레놀";
 
-  // 의약품 개요 조회
-  Future<List<OverviewModel>> getMedicineOverview() async {
+  // 개요 검색 by 이름
+  Future<List<OverviewModel>> getMedicineOverviewByName(String keyword) async {
     List<OverviewModel> overviewInstances = [];
-    final encodedName = Uri.encodeQueryComponent(medicineName);
+    final encodedName = Uri.encodeQueryComponent(keyword);
 
     final url = Uri.parse(
       "$baseUrl/DrbEasyDrugInfoService/getDrbEasyDrugList"
       "?ServiceKey=$serviceKey"
-      "&itemName=$encodedName"
-      "&$type",
+      "&$type"
+      "&itemName=$encodedName",
     );
 
     try {
@@ -51,16 +49,16 @@ class ApiService {
     return overviewInstances;
   }
 
-  // 의약품 이미지 조회
-  Future<List<ImageModel>> getMedicineImage() async {
+  // 이미지 검색 (선택적으로 사용 가능)
+  Future<List<ImageModel>> getMedicineImage(String keyword) async {
     List<ImageModel> imageInstances = [];
-    final encodedName = Uri.encodeQueryComponent(medicineName);
+    final encodedName = Uri.encodeQueryComponent(keyword);
 
     final url = Uri.parse(
       "$baseUrl/MdcinGrnIdntfcInfoService01/getMdcinGrnIdntfcInfoList01"
       "?serviceKey=$serviceKey"
-      "&item_name=$encodedName"
-      "&$type",
+      "&$type"
+      "&item_name=$encodedName",
     );
 
     try {
@@ -78,11 +76,9 @@ class ApiService {
           }
         } else {
           print("❗ 'items' 항목이 응답에 없습니다.");
-          print("응답 본문: ${response.body}");
         }
       } else {
         print("❗ 서버 오류: ${response.statusCode}");
-        print("응답 본문: ${response.body}");
       }
     } catch (e) {
       print("❗ 예외 발생: $e");

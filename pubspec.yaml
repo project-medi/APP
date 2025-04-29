@@ -70,6 +70,7 @@ flutter:
     - assets/images/impossibe_shape.svg
     - assets/images/profile_on.svg
     - assets/images/profile.svg
+    - assets/images/Notfound.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

@@ -1,5 +1,5 @@
 class OverviewModel {
-  final String itemName,
+  final String? itemName,
       entpName,
       itemSeq,
       efcyQesitm,
@@ -11,14 +11,14 @@ class OverviewModel {
       depositMethodQesitm;
 
   OverviewModel.fromJson(Map<String, dynamic> json)
-    : itemName = json['itemName'],
-      entpName = json['entpName'],
-      itemSeq = json['itemSeq'],
-      efcyQesitm = json['efcyQesitm'],
-      useMethodQesitm = json['useMethodQesitm'],
-      atpnWarnQesitm = json['atpnWarnQesitm'],
-      atpnQesitm = json['atpnQesitm'],
-      intrcQesitm = json['intrcQesitm'],
-      seQesitm = json['seQesitm'],
-      depositMethodQesitm = json['depositMethodQesitm'];
+    : itemName = json['itemName'] as String?,
+      entpName = json['entpName'] as String?,
+      itemSeq = json['itemSeq'] as String?,
+      efcyQesitm = json['efcyQesitm'] as String?,
+      useMethodQesitm = json['useMethodQesitm'] as String?,
+      atpnWarnQesitm = json['atpnWarnQesitm'] as String?,
+      atpnQesitm = json['atpnQesitm'] as String?,
+      intrcQesitm = json['intrcQesitm'] as String?,
+      seQesitm = json['seQesitm'] as String?,
+      depositMethodQesitm = json['depositMethodQesitm'] as String?;
 }
