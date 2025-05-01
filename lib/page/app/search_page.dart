@@ -178,21 +178,28 @@ class _SearchPageState extends State<SearchPage> {
                             ),
                             const SizedBox(height: 4),
                             Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
+                              spacing: 5,
+                              runSpacing: 5,
                               children:
                                   (item['tags'] as List?)
                                       ?.whereType<String>()
+                                      .expand(
+                                        (tagString) => tagString.split(','),
+                                      )
                                       .map(
                                         (tag) => Chip(
                                           label: Text(
                                             tag.trim(),
                                             style: TextStyle(
+                                              fontSize: 14,
                                               color: Colors.grey,
                                             ),
                                           ),
                                           backgroundColor: Colors.white,
-                                          shape: StadiumBorder(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                             side: BorderSide(
                                               color: Colors.blue.shade300,
                                             ),
