@@ -6,14 +6,18 @@ class MyPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: TextButton(
-          onPressed: () {},
-          child: Text(
-            '프로필',
-            style: TextStyle(fontSize: 25, color: Colors.blue),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          TextButton(
+            child: const Text(
+              '로그아웃',
+              style: TextStyle(fontSize: 20, color: Colors.black),
+            ),
+            onPressed: () {},
           ),
-        ),
+        ],
       ),
     );
   }

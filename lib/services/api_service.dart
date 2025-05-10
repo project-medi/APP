@@ -15,7 +15,7 @@ class ApiService {
     final encodedName = Uri.encodeQueryComponent(keyword);
 
     final url = Uri.parse(
-      "$baseUrl/DrbEasyDrugInfoService/getDrbEasyDrugList"
+      "$baseUrl/DrugPrdtPrmsnInfoService06/getDrugPrdtPrmsnDtlInq05"
       "?ServiceKey=$serviceKey"
       "&$type"
       "&itemName=$encodedName",
