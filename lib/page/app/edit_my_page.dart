@@ -38,6 +38,7 @@ class EditMypage extends StatefulWidget {
   const EditMypage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _EditMypageState createState() => _EditMypageState();
 }
 
@@ -126,13 +127,16 @@ class _EditMypageState extends State<EditMypage> {
         );
 
         ScaffoldMessenger.of(
+          // ignore: use_build_context_synchronously
           context,
         ).showSnackBar(SnackBar(content: Text('저장되었습니다.')));
 
         _formKey.currentState?.reset();
+        // ignore: use_build_context_synchronously
         Navigator.pop(context);
       } catch (e) {
         ScaffoldMessenger.of(
+          // ignore: use_build_context_synchronously
           context,
         ).showSnackBar(SnackBar(content: Text('저장 실패: ${e.toString()}')));
       }
@@ -173,6 +177,7 @@ class _EditMypageState extends State<EditMypage> {
     );
   }
 
+  // ignore: non_constant_identifier_names
   Widget UserDataUnit() {
     return Expanded(
       child: SingleChildScrollView(
@@ -314,7 +319,7 @@ class _EditMypageState extends State<EditMypage> {
                   keyboardType: TextInputType.number,
                   decoration: InputDecoration(
                     hintText: 'WW',
-                    suffixText: weightController.text.isNotEmpty ? 'kg' : 'kg',
+                    suffixText: weightController.text.isNotEmpty ? 'kg' : null,
                     isDense: true,
                     contentPadding: EdgeInsets.symmetric(
                       vertical: 8,
@@ -341,7 +346,7 @@ class _EditMypageState extends State<EditMypage> {
             TextFormField(
               controller: noteController,
               cursorColor: Colors.black,
-              maxLines: 2,
+              maxLines: null,
               decoration: InputDecoration(
                 hintText: '가지고 있는 지병이나 기타 질환을 입력해주세요',
                 enabledBorder: UnderlineInputBorder(
