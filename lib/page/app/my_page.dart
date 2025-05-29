@@ -25,7 +25,6 @@ class MyPage extends StatelessWidget {
         .snapshots();
   }
 
-  // ignore: non_constant_identifier_names
   Widget UserDataUnit(BuildContext context, String title, Widget data) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -94,6 +93,23 @@ class MyPage extends StatelessWidget {
           }
 
           final userData = snapshot.data!.data() as Map<String, dynamic>;
+
+          if ((userData['name'] ?? '').toString().isEmpty ||
+              (userData['phoneNumber'] ?? '').toString().isEmpty ||
+              (userData['year'] ?? '').toString().isEmpty ||
+              (userData['month'] ?? '').toString().isEmpty ||
+              (userData['day'] ?? '').toString().isEmpty ||
+              (userData['weight'] ?? '').toString().isEmpty ||
+              (userData['note'] ?? '').toString().isEmpty) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => const EditMypage()),
+              );
+            });
+            return const SizedBox.shrink();
+          }
+
           return SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.only(
@@ -146,7 +162,7 @@ class MyPage extends StatelessWidget {
                               context,
                               '이름',
                               Text(
-                                userData['name'],
+                                userData['name'] ?? '',
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w400,
@@ -169,7 +185,7 @@ class MyPage extends StatelessWidget {
                                 context,
                                 '전화번호',
                                 Text(
-                                  userData['phoneNumber'],
+                                  userData['phoneNumber'] ?? '',
                                   style: const TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w400,
@@ -195,7 +211,6 @@ class MyPage extends StatelessWidget {
                                   start: 'month',
                                   ending: '월 ',
                                 ),
-
                                 SizedBox(width: 12),
                                 birth(
                                   userData: userData,
@@ -222,7 +237,7 @@ class MyPage extends StatelessWidget {
                                 Row(
                                   children: [
                                     Text(
-                                      userData['weight'],
+                                      userData['weight'] ?? '',
                                       style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.w400,
@@ -256,7 +271,7 @@ class MyPage extends StatelessWidget {
                               context,
                               '특이사항',
                               Text(
-                                userData['note'],
+                                userData['note'] ?? '',
                                 style: const TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w400,
@@ -301,7 +316,6 @@ class MyPage extends StatelessWidget {
   }
 }
 
-// ignore: camel_case_types
 class birth extends StatelessWidget {
   const birth({
     super.key,
@@ -324,7 +338,7 @@ class birth extends StatelessWidget {
         child: Row(
           children: [
             Text(
-              '${userData[start]} ',
+              '${userData[start] ?? ''} ',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400),
             ),
             Text(

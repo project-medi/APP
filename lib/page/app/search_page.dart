@@ -7,6 +7,7 @@ class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _SearchPageState createState() => _SearchPageState();
 }
 
@@ -34,19 +35,10 @@ class _SearchPageState extends State<SearchPage> {
       query = input;
     });
 
-    final fetchedResults = await apiService.getMedicineOverviewByName(input);
+    final fetchedResults = await apiService.getMedicineOverview(input);
 
     setState(() {
-      results =
-          fetchedResults
-              .map(
-                (e) => {
-                  'title': e.itemName ?? '',
-                  'tags': (e.seQesitm ?? '').split(','),
-                  'description': e.efcyQesitm ?? '',
-                },
-              )
-              .toList();
+      results = fetchedResults.map((e) => {'title': e.itemName}).toList();
     });
   }
 
@@ -103,6 +95,7 @@ class _SearchPageState extends State<SearchPage> {
                 focusNode: _focusNode,
                 onChanged: onSearchChanged,
                 onSubmitted: onSearchSubmitted,
+                cursorColor: Colors.black,
                 decoration: InputDecoration(
                   hintText: '검색어를 입력해주세요',
                   suffixIcon:
@@ -124,7 +117,7 @@ class _SearchPageState extends State<SearchPage> {
             if (query.isNotEmpty && !isSubmitted)
               Expanded(
                 child: FutureBuilder<List<OverviewModel>>(
-                  future: apiService.getMedicineOverviewByName(query),
+                  future: apiService.getMedicineOverview(query),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return const Center(child: CircularProgressIndicator());
@@ -138,12 +131,24 @@ class _SearchPageState extends State<SearchPage> {
                             child: SvgPicture.asset(
                               'assets/images/Notfound.svg',
                               height: 150,
+                              // ignore: deprecated_member_use
+                              color: Color(0xffC5C5C5),
                             ),
                           ),
                           const SizedBox(height: 13),
-                          const Center(child: Text('검색어와 일치하는 약이 없습니다')),
+                          const Center(
+                            child: Text(
+                              '검색어와 일치하는 약이 없습니다',
+                              style: TextStyle(color: Color(0xffC5C5C5)),
+                            ),
+                          ),
                           const SizedBox(height: 2),
-                          const Center(child: Text('검색어를 다시 확인해주세요')),
+                          const Center(
+                            child: Text(
+                              '검색어를 다시 확인해주세요',
+                              style: TextStyle(color: Color(0xffC5C5C5)),
+                            ),
+                          ),
                         ],
                       );
                     }
@@ -151,19 +156,17 @@ class _SearchPageState extends State<SearchPage> {
                     final items = snapshot.data!;
                     return ListView(
                       children:
-                          items
-                              .map(
-                                (e) => ListTile(
-                                  title: Text.rich(
-                                    highlightText(e.itemName ?? '', query),
-                                  ),
-                                  onTap: () {
-                                    _controller.text = e.itemName ?? '';
-                                    onSearchSubmitted(e.itemName ?? '');
-                                  },
-                                ),
-                              )
-                              .toList(),
+                          items.map((e) {
+                            return ListTile(
+                              title: Text.rich(
+                                highlightText(e.itemName, query),
+                              ),
+                              onTap: () {
+                                _controller.text = e.itemName;
+                                onSearchSubmitted(e.itemName);
+                              },
+                            );
+                          }).toList(),
                     );
                   },
                 ),
@@ -174,7 +177,6 @@ class _SearchPageState extends State<SearchPage> {
                   itemCount: results.length,
                   itemBuilder: (_, index) {
                     final item = results[index];
-                    final tags = (item['tags'] as List).whereType<String>();
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 6),
                       child: Padding(
@@ -190,35 +192,7 @@ class _SearchPageState extends State<SearchPage> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Wrap(
-                              spacing: 5,
-                              runSpacing: 5,
-                              children:
-                                  tags
-                                      .map(
-                                        (tag) => Chip(
-                                          label: Text(
-                                            tag.trim(),
-                                            style: const TextStyle(
-                                              fontSize: 14,
-                                              color: Colors.grey,
-                                            ),
-                                          ),
-                                          backgroundColor: Colors.white,
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            side: BorderSide(
-                                              color: Colors.blue.shade300,
-                                            ),
-                                          ),
-                                        ),
-                                      )
-                                      .toList(),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(item['description'] ?? ''),
+
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(

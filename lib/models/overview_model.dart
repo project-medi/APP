@@ -1,24 +1,30 @@
-class OverviewModel {
-  final String? itemName,
-      entpName,
-      itemSeq,
-      efcyQesitm,
-      useMethodQesitm,
-      atpnWarnQesitm,
-      atpnQesitm,
-      intrcQesitm,
-      seQesitm,
-      depositMethodQesitm;
+import 'package:project_medi/page/app/utils/html_cleaner.dart';
 
-  OverviewModel.fromJson(Map<String, dynamic> json)
-    : itemName = json['itemName'] as String?,
-      entpName = json['entpName'] as String?,
-      itemSeq = json['itemSeq'] as String?,
-      efcyQesitm = json['efcyQesitm'] as String?,
-      useMethodQesitm = json['useMethodQesitm'] as String?,
-      atpnWarnQesitm = json['atpnWarnQesitm'] as String?,
-      atpnQesitm = json['atpnQesitm'] as String?,
-      intrcQesitm = json['intrcQesitm'] as String?,
-      seQesitm = json['seQesitm'] as String?,
-      depositMethodQesitm = json['depositMethodQesitm'] as String?;
+class OverviewModel {
+  final String itemName;
+  final String entpName;
+  final String etcOtcName;
+  final String eeDocData;
+  final String udDocData;
+  final String nbDocData;
+
+  OverviewModel({
+    required this.itemName,
+    required this.entpName,
+    required this.etcOtcName,
+    required this.eeDocData,
+    required this.udDocData,
+    required this.nbDocData,
+  });
+
+  factory OverviewModel.fromJson(Map<String, dynamic> json) {
+    return OverviewModel(
+      itemName: json['ITEM_NAME'] ?? '',
+      entpName: json['ENTP_NAME'] ?? '',
+      etcOtcName: json['ETC_OTC_NAME'] ?? '',
+      eeDocData: parseEEDoc(json['EE_DOC_DATA'] ?? ''),
+      udDocData: parseEEDoc(json['UD_DOC_DATA'] ?? ''),
+      nbDocData: parseEEDoc(json['NB_DOC_DATA'] ?? ''),
+    );
+  }
 }

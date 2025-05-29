@@ -67,6 +67,29 @@ class _CalendarPageState extends State<CalendarPage> {
             children: [
               const SizedBox(height: 50),
               buildCalendar(),
+              SizedBox(height: 20),
+              Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  '약 복용기간이 궁금하다면',
+                  style: TextStyle(
+                    color: Color(0xff292929),
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Align(
+                alignment: Alignment.topLeft,
+                child: Text(
+                  '복용 일정을 클릭하세요',
+                  style: TextStyle(
+                    color: Color(0xff707070),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
               buildToggleButton('감기약'),
               const SizedBox(height: 20),
