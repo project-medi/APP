@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:project_medi/page/app/detail_page.dart';
 import 'package:project_medi/services/api_service.dart';
 import 'package:project_medi/models/overview_model.dart';
 
@@ -7,20 +8,18 @@ class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _SearchPageState createState() => _SearchPageState();
 }
 
 class _SearchPageState extends State<SearchPage> {
   final TextEditingController _controller = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-
   final ApiService apiService = ApiService();
 
   String query = '';
   bool isSubmitted = false;
 
-  List<Map<String, dynamic>> results = [];
+  List<OverviewModel> results = [];
 
   void onSearchChanged(String input) {
     setState(() {
@@ -38,7 +37,7 @@ class _SearchPageState extends State<SearchPage> {
     final fetchedResults = await apiService.getMedicineOverview(input);
 
     setState(() {
-      results = fetchedResults.map((e) => {'title': e.itemName}).toList();
+      results = fetchedResults;
     });
   }
 
@@ -124,33 +123,7 @@ class _SearchPageState extends State<SearchPage> {
                     } else if (snapshot.hasError) {
                       return Center(child: Text('에러 발생: ${snapshot.error}'));
                     } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                      return Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Center(
-                            child: SvgPicture.asset(
-                              'assets/images/Notfound.svg',
-                              height: 150,
-                              // ignore: deprecated_member_use
-                              color: Color(0xffC5C5C5),
-                            ),
-                          ),
-                          const SizedBox(height: 13),
-                          const Center(
-                            child: Text(
-                              '검색어와 일치하는 약이 없습니다',
-                              style: TextStyle(color: Color(0xffC5C5C5)),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          const Center(
-                            child: Text(
-                              '검색어를 다시 확인해주세요',
-                              style: TextStyle(color: Color(0xffC5C5C5)),
-                            ),
-                          ),
-                        ],
-                      );
+                      return _buildNotFound();
                     }
 
                     final items = snapshot.data!;
@@ -176,33 +149,87 @@ class _SearchPageState extends State<SearchPage> {
                 child: ListView.builder(
                   itemCount: results.length,
                   itemBuilder: (_, index) {
-                    final item = results[index];
+                    final e = results[index];
                     return Card(
                       margin: const EdgeInsets.symmetric(vertical: 6),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item['title'] ?? '',
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0xffEAEAEA)),
+                          color: Colors.white,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                e.itemName,
+                                style: const TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xff222222),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-
-                            Align(
-                              alignment: Alignment.centerRight,
-                              child: TextButton(
-                                onPressed: () {
-                                  // 상세 페이지 이동 등 기능 구현 예정
-                                },
-                                child: const Text('자세히 보기 >'),
+                              const SizedBox(height: 8),
+                              Text(
+                                e.eeDocData,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: Color(0xff707070),
+                                ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 6),
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => DetailPage(model: e),
+                                      ),
+                                    );
+                                  },
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.end,
+                                        children: const [
+                                          Text(
+                                            '자세히 보기',
+                                            style: TextStyle(
+                                              color: Color(0xff707070),
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          SizedBox(height: 2),
+                                          SizedBox(
+                                            width: 72,
+                                            child: Divider(
+                                              color: Color(0xff707070),
+                                              thickness: 1,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const Icon(
+                                        Icons.arrow_forward_ios,
+                                        color: Color(0xff707070),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
@@ -212,6 +239,35 @@ class _SearchPageState extends State<SearchPage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildNotFound() {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Center(
+          child: SvgPicture.asset(
+            'assets/images/Notfound.svg',
+            height: 150,
+            color: const Color(0xffC5C5C5),
+          ),
+        ),
+        const SizedBox(height: 13),
+        const Center(
+          child: Text(
+            '검색어와 일치하는 약이 없습니다',
+            style: TextStyle(color: Color(0xffC5C5C5)),
+          ),
+        ),
+        const SizedBox(height: 2),
+        const Center(
+          child: Text(
+            '검색어를 다시 확인해주세요',
+            style: TextStyle(color: Color(0xffC5C5C5)),
+          ),
+        ),
+      ],
     );
   }
 }

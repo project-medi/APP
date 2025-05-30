@@ -33,22 +33,25 @@ class TimerPage extends StatelessWidget {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: fetchTimers(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Center(
+        child: FutureBuilder<List<Map<String, dynamic>>>(
+          future: fetchTimers(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          final timers = snapshot.data ?? [];
+            final timers = snapshot.data ?? [];
 
-          if (timers.isEmpty) {
-            return _buildEmptyView(context);
-          } else {
-            return _buildTimerList(timers);
-          }
-        },
+            if (timers.isEmpty) {
+              return _buildEmptyView(context);
+            } else {
+              return _buildTimerList(timers);
+            }
+          },
+        ),
       ),
+
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16),
         child: ElevatedButton(
@@ -121,49 +124,97 @@ class TimerPage extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Color(0xffEAEAEA)),
+              color: Colors.white,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text('약 목록: $medicines'),
-                const SizedBox(height: 4),
-                Text('복용기간: $startDate ~ $endDate'),
-                const SizedBox(height: 4),
-                const Text('알람시간:'),
-                ...alarmTimes.map(
-                  (time) => Padding(
-                    padding: const EdgeInsets.only(left: 6),
-                    child: Text('• $time'),
+                  const SizedBox(height: 8),
+                  Text(
+                    '약 목록: $medicines',
+                    style: TextStyle(
+                      color: Color(0xff707070),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
                   ),
-                ),
-                const Divider(height: 20),
-                Text('메모내용: $memo'),
-                const SizedBox(height: 8),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      // TODO: 재설정 기능 추가
-                    },
-                    child: const Text(
-                      '재설정',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        decoration: TextDecoration.underline,
+                  const SizedBox(height: 4),
+                  Text(
+                    '복용기간: $startDate ~ $endDate',
+                    style: TextStyle(
+                      color: Color(0xff707070),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '알람시간:',
+                    style: TextStyle(
+                      color: Color(0xff707070),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  ...alarmTimes.map(
+                    (time) => Padding(
+                      padding: const EdgeInsets.only(left: 6),
+                      child: Text(
+                        '• $time',
+                        style: TextStyle(
+                          color: Color(0xff707070),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  const Divider(height: 20),
+                  Text(
+                    '메모내용: $memo',
+                    style: TextStyle(
+                      color: Color(0xff707070),
+                      fontSize: 16,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const EditTimerPage(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        '재설정',
+                        style: TextStyle(
+                          color: Color(0xffC5C5C5),
+                          decoration: TextDecoration.underline,
+                          decorationColor: Color(0xff707070),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
