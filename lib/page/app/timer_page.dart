@@ -1,10 +1,97 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:project_medi/page/app/edit_timer_page.dart';
+import 'package:timezone/timezone.dart' as tz;
+import 'package:timezone/data/latest.dart' as tz;
 
-class TimerPage extends StatelessWidget {
+class TimerPage extends StatefulWidget {
   const TimerPage({super.key});
+
+  @override
+  State<TimerPage> createState() => _TimerPageState();
+}
+
+class _TimerPageState extends State<TimerPage> {
+  final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  bool _isMounted = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeNotifications();
+  }
+
+  @override
+  void dispose() {
+    _isMounted = false;
+    super.dispose();
+  }
+
+  Future<void> _initializeNotifications() async {
+    tz.initializeTimeZones();
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+    const InitializationSettings initSettings = InitializationSettings(
+      android: androidSettings,
+    );
+    await flutterLocalNotificationsPlugin.initialize(initSettings);
+
+    final androidPlugin =
+        flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+    await androidPlugin?.requestExactAlarmsPermission();
+
+    if (await Permission.notification.isDenied) {
+      await Permission.notification.request();
+    }
+  }
+
+  Future<void> _scheduleAlarm(String time, int id, String title) async {
+    final parts = time.replaceAll(RegExp(r'[^0-9]'), ' ').trim().split(' ');
+    if (parts.length < 3) return;
+    final hour = int.tryParse(parts[1]) ?? 0;
+    final minute = int.tryParse(parts[2]) ?? 0;
+    final isAm = parts[0] == '오전';
+    final now = DateTime.now();
+
+    final scheduledDate = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      isAm ? hour : (hour == 12 ? 12 : hour + 12),
+      minute,
+    );
+
+    var scheduleTZ = tz.TZDateTime.from(scheduledDate, tz.local);
+
+    if (scheduleTZ.isBefore(DateTime.now())) {
+      scheduleTZ = scheduleTZ.add(const Duration(days: 1));
+    }
+
+    await flutterLocalNotificationsPlugin.zonedSchedule(
+      id,
+      '$title 복용 시간',
+      '약 복용 알람 시간입니다.',
+      scheduleTZ,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'alarm_channel_id',
+          '알람 채널',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
+      ),
+      matchDateTimeComponents: DateTimeComponents.time,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+    );
+  }
 
   Future<List<Map<String, dynamic>>> fetchTimers() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -20,7 +107,18 @@ class TimerPage extends StatelessWidget {
             .orderBy('createdAt', descending: true)
             .get();
 
-    return snapshot.docs.map((doc) => doc.data()).toList();
+    final timers = snapshot.docs.map((doc) => doc.data()).toList();
+
+    for (int i = 0; i < timers.length; i++) {
+      final timer = timers[i];
+      final name = timer['name'] ?? '약';
+      final alarmTimes = (timer['alarmTimes'] as List?)?.cast<String>() ?? [];
+      for (int j = 0; j < alarmTimes.length; j++) {
+        _scheduleAlarm(alarmTimes[j], i * 100 + j, name);
+      }
+    }
+
+    return timers;
   }
 
   @override
@@ -37,6 +135,7 @@ class TimerPage extends StatelessWidget {
         child: FutureBuilder<List<Map<String, dynamic>>>(
           future: fetchTimers(),
           builder: (context, snapshot) {
+            if (!_isMounted) return const SizedBox();
             if (snapshot.connectionState == ConnectionState.waiting) {
               return const Center(child: CircularProgressIndicator());
             }
@@ -51,7 +150,6 @@ class TimerPage extends StatelessWidget {
           },
         ),
       ),
-
       bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16),
         child: ElevatedButton(

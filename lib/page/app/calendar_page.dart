@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -15,28 +17,58 @@ class _CalendarPageState extends State<CalendarPage> {
   RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOff;
 
   final Map<String, List<DateTime>> _dateGroups = {};
-  final Map<String, bool> _buttonStates = {'감기약': false, '진통제': false};
+  final Map<String, bool> _buttonStates = {};
 
   @override
   void initState() {
     super.initState();
-    final today = DateTime.now();
-    _dateGroups['감기약'] =
-        [
-          21,
-          22,
-          23,
-          24,
-          25,
-        ].map((d) => DateTime(today.year, today.month, d)).toList();
-    _dateGroups['진통제'] =
-        [27, 28, 29].map((d) => DateTime(today.year, today.month, d)).toList();
+    fetchTimersFromFirestore();
+  }
+
+  Future<void> fetchTimersFromFirestore() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final snapshot =
+        await FirebaseFirestore.instance
+            .collection('medi')
+            .doc('user')
+            .collection('user')
+            .doc(user.uid)
+            .collection('timers')
+            .get();
+
+    final dateGroups = <String, List<DateTime>>{};
+    final buttonStates = <String, bool>{};
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+      final name = data['name'] ?? '이름 없음';
+      final start = DateTime.tryParse(data['startDate'] ?? '');
+      final end = DateTime.tryParse(data['endDate'] ?? '');
+      if (start == null || end == null) continue;
+
+      final dates = <DateTime>[];
+      DateTime current = start;
+      while (!current.isAfter(end)) {
+        dates.add(current);
+        current = current.add(const Duration(days: 1));
+      }
+      dateGroups[name] = dates;
+      buttonStates[name] = false;
+    }
+
+    setState(() {
+      _dateGroups.clear();
+      _dateGroups.addAll(dateGroups);
+      _buttonStates.clear();
+      _buttonStates.addAll(buttonStates);
+    });
   }
 
   void _selectGroup(String label) {
     final dates = _dateGroups[label]!;
     dates.sort();
-
     final alreadySelected =
         _rangeStart == dates.first && _rangeEnd == dates.last;
 
@@ -66,9 +98,10 @@ class _CalendarPageState extends State<CalendarPage> {
           child: Column(
             children: [
               const SizedBox(height: 50),
+              buildCustomHeader(),
               buildCalendar(),
-              SizedBox(height: 20),
-              Align(
+              const SizedBox(height: 20),
+              const Align(
                 alignment: Alignment.topLeft,
                 child: Text(
                   '약 복용기간이 궁금하다면',
@@ -79,7 +112,7 @@ class _CalendarPageState extends State<CalendarPage> {
                   ),
                 ),
               ),
-              Align(
+              const Align(
                 alignment: Alignment.topLeft,
                 child: Text(
                   '복용 일정을 클릭하세요',
@@ -91,13 +124,44 @@ class _CalendarPageState extends State<CalendarPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              buildToggleButton('감기약'),
-              const SizedBox(height: 20),
-              buildToggleButton('진통제'),
+              ..._buttonStates.keys.map(
+                (label) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: buildToggleButton(label),
+                ),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget buildCustomHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chevron_left),
+          onPressed: () {
+            setState(() {
+              _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
+            });
+          },
+        ),
+        Text(
+          '${_focusedDay.year}년 ${_focusedDay.month}월 ${_focusedDay.day}일',
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        IconButton(
+          icon: const Icon(Icons.chevron_right),
+          onPressed: () {
+            setState(() {
+              _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
+            });
+          },
+        ),
+      ],
     );
   }
 
@@ -119,151 +183,23 @@ class _CalendarPageState extends State<CalendarPage> {
           _rangeSelectionMode = RangeSelectionMode.toggledOn;
         });
       },
-
-      /// ✅ 선택한 날이 시작과 끝이 같을 때도 꾸며주도록 설정
-      selectedDayPredicate: (day) {
-        return _rangeStart != null &&
-            _rangeEnd != null &&
-            _rangeStart == _rangeEnd &&
-            isSameDay(day, _rangeStart);
-      },
-
+      selectedDayPredicate: (day) => isSameDay(day, DateTime.now()),
       calendarStyle: CalendarStyle(
-        rangeHighlightColor: const Color(0xFF76ABFF),
-        withinRangeDecoration: const BoxDecoration(),
-        rangeStartTextStyle: const TextStyle(color: Colors.white),
-        rangeEndTextStyle: const TextStyle(color: Colors.white),
+        todayDecoration: const BoxDecoration(
+          color: Color(0xFF23A3FF),
+          shape: BoxShape.circle,
+        ),
+        rangeHighlightColor: const Color(0xFF23A3FF),
+        rangeStartDecoration: const BoxDecoration(
+          color: Color(0xFF23A3FF),
+          shape: BoxShape.circle,
+        ),
+        rangeEndDecoration: const BoxDecoration(
+          color: Color(0xFF23A3FF),
+          shape: BoxShape.circle,
+        ),
         withinRangeTextStyle: const TextStyle(color: Colors.white),
-        selectedDecoration: const BoxDecoration(),
-        todayDecoration: const BoxDecoration(),
-        defaultDecoration: const BoxDecoration(),
-        outsideDecoration: const BoxDecoration(),
-        weekendDecoration: const BoxDecoration(),
-        holidayDecoration: const BoxDecoration(),
-        disabledDecoration: const BoxDecoration(),
       ),
-
-      calendarBuilders: CalendarBuilders(
-        headerTitleBuilder: (context, day) {
-          return Column(
-            children: [
-              Text(
-                '${day.month}월',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                color: const Color(0xffAEAEAE),
-                height: 1,
-                width: double.infinity,
-              ),
-            ],
-          );
-        },
-
-        /// ✅ 단일 선택 시 (rangeStart == rangeEnd) 적용될 스타일
-        selectedBuilder: (context, date, _) {
-          return Center(
-            child: Container(
-              width: 36,
-              height: 34,
-              decoration: BoxDecoration(
-                color: const Color(0xFF76ABFF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  '${date.day}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          );
-        },
-
-        todayBuilder: (context, day, focusedDay) {
-          return Center(
-            child: Container(
-              width: 36,
-              height: 34,
-              decoration: BoxDecoration(
-                color: const Color(0xFF76ABFF),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Center(
-                child: Text(
-                  '${day.day}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          );
-        },
-
-        rangeStartBuilder: (context, date, _) {
-          return Center(
-            child: Container(
-              width: 36,
-              height: 34,
-              decoration: const BoxDecoration(
-                color: Color(0xFF76ABFF),
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  '${date.day}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          );
-        },
-
-        rangeEndBuilder: (context, date, _) {
-          return Center(
-            child: Container(
-              width: 36,
-              height: 34,
-              decoration: const BoxDecoration(
-                color: Color(0xFF76ABFF),
-                borderRadius: BorderRadius.only(
-                  topRight: Radius.circular(12),
-                  bottomRight: Radius.circular(12),
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  '${date.day}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          );
-        },
-
-        withinRangeBuilder: (context, date, _) {
-          return Center(
-            child: Container(
-              width: 36,
-              height: 34,
-              color: const Color(0xFF76ABFF),
-              child: Center(
-                child: Text(
-                  '${date.day}',
-                  style: const TextStyle(color: Colors.white),
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-
       headerStyle: const HeaderStyle(
         titleCentered: true,
         formatButtonVisible: false,
@@ -276,11 +212,11 @@ class _CalendarPageState extends State<CalendarPage> {
 
   Widget buildToggleButton(String label) {
     final isSelected = _buttonStates[label] ?? false;
-
     return ElevatedButton(
       onPressed: () => _selectGroup(label),
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? Colors.blue : const Color(0xffF8F8F8),
+        backgroundColor:
+            isSelected ? const Color(0xff23A3FF) : const Color(0xffF8F8F8),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         minimumSize: const Size(double.infinity, 50),
         alignment: Alignment.centerLeft,
@@ -298,13 +234,10 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
           ),
           if (isSelected)
-            IconButton(
-              onPressed: () => print('김동현 바보'),
-              icon: const Icon(
-                Icons.arrow_forward_ios_rounded,
-                color: Colors.white,
-                size: 18,
-              ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              color: Colors.white,
+              size: 18,
             ),
         ],
       ),
