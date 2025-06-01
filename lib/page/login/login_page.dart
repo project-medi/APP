@@ -21,6 +21,31 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _obscurePassword = true;
 
+  Future<void> sendPasswordReset() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      setState(() {
+        _errorMessage = '이메일을 입력해주세요';
+      });
+      return;
+    }
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+      ScaffoldMessenger.of(
+        // ignore: use_build_context_synchronously
+        context,
+      ).showSnackBar(SnackBar(content: Text('비밀번호 재설정 이메일을 보냈습니다.')));
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        if (e.code == 'user-not-found') {
+          _errorMessage = '해당 이메일로 들록된 계정이 없습니다.';
+        } else {
+          _errorMessage = '비밀번호 재설정에 샐패했습니다.';
+        }
+      });
+    }
+  }
+
   Future<void> _login(BuildContext context) async {
     try {
       await _auth.signInWithEmailAndPassword(
@@ -151,11 +176,17 @@ class _LoginPageState extends State<LoginPage> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            // 비밀번호 찾기 기능
+                            sendPasswordReset();
                           },
                           child: const Text(
-                            '비밀번호 찾기',
-                            style: TextStyle(color: Colors.grey),
+                            '비밀번호를 잊어버리셨나요?',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xffBDBDBD),
+                              decoration: TextDecoration.underline,
+                              decorationColor: Color(0xffBDBDBD),
+                            ),
                           ),
                         ),
                       ),
